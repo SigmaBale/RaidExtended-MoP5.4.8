@@ -1,0 +1,11 @@
+## Interface: 50408
+## Title: RaidExtended
+## Notes: Raid tools and finder for MoP client.
+## Version: 1.0
+## DefaultState: enabled
+## SavedVariables: RaidExtendedDB
+
+Config.lua
+Durability.lua
+Core.lua
+Init.lua
