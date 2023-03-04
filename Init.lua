@@ -41,7 +41,9 @@ local function HandleSlashCommand(str)
 end
 
 core.commands = {
-    ["menu"] = core.Config.ToggleMenu,
+    ["menu"] = function()
+        core.Config:ShowUIFrame("FRAME_MENU")
+    end,
 
     ["help"] = function ()
         core:print("Down below are listed all RaidExtended commands")
@@ -52,16 +54,16 @@ core.commands = {
         core:printHelp("/re config", "- open configuration tab")
     end,
 
-    ["groupfinder"] = function ()
-        print("Not yet implemented, sorry :(")
+    ["groupfinder"] = function()
+        core.Config:ShowUIFrame("FRAME_GROUPFINDER")
     end,
 
-    ["interface"] = function ()
-        print("Not yet implemented, sorry :(")
+    ["interface"] = function()
+        core.Config:ShowUIFrame("FRAME_INTERFACE")
     end,
 
-    ["config"] = function ()
-        print("Not yet implemented, sorry :(")
+    ["config"] = function()
+        core.Config:ShowUIFrame("FRAME_CONFIG")
     end,
 }
 
@@ -80,9 +82,10 @@ function core:print(...)
 end
 
 function core:init()
+    core.Config:init()
     SLASH_RaidExtended1 = "/re"
     SLASH_RaidExtended2 = "/raidextended"
-    SlashCmdList["RaidExtended"] = HandleSlashCommand
+    SlashCmdList.RaidExtended = HandleSlashCommand
     ChatFrame1:SetFontObject(core.Config:GetActiveTheme().text.font)
 end
 
