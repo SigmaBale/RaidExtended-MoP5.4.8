@@ -260,9 +260,6 @@ function Config:CreateUI()
     local relativeTo, ConfigFrame = UIConfig.Frames.Config.TitleBg, UIConfig.Frames.Config
     ConfigFrame.title = Config:CreateFontStringWithText(ConfigFrame, "FRAME_CONFIG_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Config")
 
-    GroupFinderFrame:Hide()
-    InterfaceFrame:Hide()
-    ConfigFrame:Hide()
-    MenuFrame:Hide()
+    Config:HideChildFrames()
     return UIConfig
 end
