@@ -78,15 +78,15 @@ end
 function core:print(...)
     local _, _, trackerColor = core.Config:GetActiveThemeComponents()
     local prefix = string.format("|cff%s%s|r", trackerColor, "RaidExtended:")
-    DEFAULT_CHAT_FRAME:AddMessage(table.concat({...}, " "))
+    DEFAULT_CHAT_FRAME:AddMessage(string.format("%s%s", prefix, table.concat({...}, " ")))
 end
 
 function core:init()
-    core.Config:init()
+    core.Config.init()
     SLASH_RaidExtended1 = "/re"
     SLASH_RaidExtended2 = "/raidextended"
     SlashCmdList.RaidExtended = HandleSlashCommand
-    ChatFrame1:SetFontObject(core.Config:GetActiveTheme().text.font)
+    ChatFrame1:SetFontObject(self.Config:GetActiveTheme().text.font)
 end
 
 local events = CreateFrame("Frame")

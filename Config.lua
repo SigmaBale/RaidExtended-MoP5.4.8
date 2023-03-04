@@ -148,20 +148,22 @@ function Config:SetTheme(str)
 end
 
 --Create UI or load it from `SavedVariables`
-function Config:init()
+function Config.init()
     reUI = reUI or Config:CreateUI()
 end
 
 --Returns nil if Frame provided doesn't exist or displays the frame
-function Config:ShowUIFrame(frame)
-    local frame = GetClickFrame(frame)
+function Config:ShowUIFrame(str)
+    local frame = GetClickFrame(str)
     self:HideChildFrames()
     if not (frame) then return nil else frame:Show() end
 end
 
-function Config:HideChildFrames()
+function Config.HideChildFrames()
     for _, frame in pairs(reUI.Frames) do frame:Hide() end
 end
+
+local RE = {}
 
 ---Generalized button widget function
 ---@param name? string
@@ -176,7 +178,7 @@ end
 ---@param text string
 ---@param font string
 ---@param fontSize number
-function Config:CreateButton(name, point, relativeTo, template, relativePoint, xOffset, yOffset, width, height, text, font, fontSize)
+function RE.CreateButton(name, point, relativeTo, template, relativePoint, xOffset, yOffset, width, height, text, font, fontSize)
     local btn = CreateFrame("Button", name, relativeTo, template)
     btn:SetPoint(point, relativeTo, relativePoint, xOffset, yOffset)
     btn:SetSize(width, height)
@@ -197,7 +199,7 @@ end
 ---@param width number
 ---@param height number
 ---@return Frame
-function Config:CreateFrame(name, template, width, height)
+function RE.CreateFrame(name, template, width, height)
     local UIFrame = CreateFrame("Frame", name, UIParent, template)
     UIFrame:SetSize(width, height)
     UIFrame:SetPoint("CENTER")
@@ -217,12 +219,17 @@ end
 ---@param yOffset? number
 ---@param text string
 ---@return FontString
-function Config:CreateFontStringWithText(frame, name, layer, template, size, point, relativeTo, relativePoint, text, xOffset, yOffset)
+function RE.CreateFontStringWithText(frame, name, layer, template, size, point, relativeTo, relativePoint, text, xOffset, yOffset)
     local font = frame:CreateFontString(name, layer, template)
     font:SetFont(Config:GetActiveFontPath(), size, "OUTLINE")
     font:SetPoint(point, relativeTo, relativePoint, xOffset, yOffset)
     font:SetText(text)
     return font
+end
+
+--Hides variable amount of frames, primarily only used in CreateUI to hide all frames as default
+function RE.HideFrames(...)
+    for _, frame in ipairs({...}) do frame:Hide() end
 end
 
 --Default Menu constructor, it is not run if reUI is loaded from SavedVariables
@@ -232,34 +239,39 @@ function Config:CreateUI()
     UIConfig.Frames = {}
 
     --Menu Frame and Widgets
-    UIConfig.Frames.Menu = Config:CreateFrame("FRAME_MENU", "BasicFrameTemplateWithInset", 250, 250)
+    UIConfig.Frames.Menu = RE.CreateFrame("FRAME_MENU", "BasicFrameTemplateWithInset", 250, 250)
     ---@diagnostic disable-next-line: undefined-field
     local relativeTo, MenuFrame = UIConfig.Frames.Menu.TitleBg, UIConfig.Frames.Menu
     MenuFrame.Buttons = {}
     MenuFrame.Text = {}
-    MenuFrame.Text.title = Config:CreateFontStringWithText(MenuFrame, "FRAME_MENU_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "Raid Extended")
-    MenuFrame.Buttons.GroupFinder = Config:CreateButton("FRAME_MENU_BUTTON_GROUPFINDER", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Group Finder", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Interface = Config:CreateButton("FRAME_MENU_BUTTON_INTERFACE", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -100, 160, 30, "Interface", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Config = Config:CreateButton("FRAME_MENU_BUTTON_CONFIG", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -140, 160, 30, "Config", self:GetActiveFontPath(), 20)
+    MenuFrame.Text.title = RE.CreateFontStringWithText(MenuFrame, "FRAME_MENU_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "Raid Extended")
+    MenuFrame.Buttons.GroupFinder = RE.CreateButton("FRAME_MENU_BUTTON_GROUPFINDER", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Group Finder", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.GroupFinder:SetScript("OnClick", function() self:ShowUIFrame("FRAME_GROUPFINDER") end)
+    MenuFrame.Buttons.Interface = RE.CreateButton("FRAME_MENU_BUTTON_INTERFACE", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -100, 160, 30, "Interface", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Interface:SetScript("OnClick", function() self:ShowUIFrame("FRAME_INTERFACE") end)
+    MenuFrame.Buttons.Config = RE.CreateButton("FRAME_MENU_BUTTON_CONFIG", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -140, 160, 30, "Config", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Config:SetScript("OnClick", function() self:ShowUIFrame("FRAME_CONFIG") end)
 
     --GroupFinder Frame and Widgets
-    UIConfig.Frames.GroupFinder = Config:CreateFrame("FRAME_GROUPFINDER", "BasicFrameTemplateWithInset", 300, 400)
+    UIConfig.Frames.GroupFinder = RE.CreateFrame("FRAME_GROUPFINDER", "BasicFrameTemplateWithInset", 300, 400)
     ---@diagnostic disable-next-line: undefined-field
     local relativeTo, GroupFinderFrame = UIConfig.Frames.GroupFinder.TitleBg, UIConfig.Frames.GroupFinder
-    GroupFinderFrame.title = Config:CreateFontStringWithText(GroupFinderFrame, "FRAME_GROUPFINDER_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE GroupFinder")
+    GroupFinderFrame.title = RE.CreateFontStringWithText(GroupFinderFrame, "FRAME_GROUPFINDER_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE GroupFinder")
 
     --Interface Frame and Widgets
-    UIConfig.Frames.Interface = Config:CreateFrame("FRAME_INTERFACE", "BasicFrameTemplateWithInset", 500, 500)
+    UIConfig.Frames.Interface = RE.CreateFrame("FRAME_INTERFACE", "BasicFrameTemplateWithInset", 500, 500)
     ---@diagnostic disable-next-line: undefined-field
     local relativeTo, InterfaceFrame = UIConfig.Frames.Interface.TitleBg, UIConfig.Frames.Interface
-    InterfaceFrame.title = Config:CreateFontStringWithText(InterfaceFrame, "FRAME_INTERFACE_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Interface")
+    InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "FRAME_INTERFACE_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Interface")
 
     --Config Frame and Widgets
-    UIConfig.Frames.Config = Config:CreateFrame("FRAME_CONFIG", "BasicFrameTemplateWithInset", 300, 300)
+    UIConfig.Frames.Config = RE.CreateFrame("FRAME_CONFIG", "BasicFrameTemplateWithInset", 300, 300)
     ---@diagnostic disable-next-line: undefined-field
     local relativeTo, ConfigFrame = UIConfig.Frames.Config.TitleBg, UIConfig.Frames.Config
-    ConfigFrame.title = Config:CreateFontStringWithText(ConfigFrame, "FRAME_CONFIG_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Config")
+    ConfigFrame.title = RE.CreateFontStringWithText(ConfigFrame, "FRAME_CONFIG_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Config")
 
-    Config:HideChildFrames()
+    --Hiding them with another function other than `HideChildFrames` 
+    --because HideChildFrames indexes into reUI table that is currently being created
+    RE.HideFrames(MenuFrame, GroupFinderFrame, ConfigFrame, InterfaceFrame)
     return UIConfig
 end
