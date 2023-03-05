@@ -80,7 +80,7 @@ Config.Themes = {
     ["Default"] = {
         ["text"] = {
             ["color"] = "efe6d5",
-            ["font"] = Config.Fonts.LifeCraft.object
+            ["font"] = Config.Fonts.UbuntuLight.object
         },
         ["command"] = "e73213",
         ["tracker"] = "9dbeb7",
@@ -155,11 +155,11 @@ end
 --Returns nil if Frame provided doesn't exist or displays the frame
 function Config:ShowUIFrame(str)
     local frame = GetClickFrame(str)
-    self:HideChildFrames()
-    if not (frame) then return nil else frame:Show() end
+    self:HideUIFrames()
+    if not frame then return nil else frame:Show() end
 end
 
-function Config.HideChildFrames()
+function Config.HideUIFrames()
     for _, frame in pairs(reUI.Frames) do frame:Hide() end
 end
 
@@ -232,46 +232,80 @@ function RE.HideFrames(...)
     for _, frame in ipairs({...}) do frame:Hide() end
 end
 
+local function ScrollFrame_OnMouseWheel(self, delta) 
+    local newValue = self:GetVerticalScroll() - (delta * 5)
+    if (newValue < 0) then
+        newValue = 0
+    elseif (newValue > self:GetVerticalScrollRange()) then
+        newValue = self:GetVerticalScrollRange()
+    end
+
+    self:SetVerticalScroll(newValue)
+end
+
 --Default Menu constructor, it is not run if reUI is loaded from SavedVariables
 function Config:CreateUI()
     --Parent Frame
     local UIConfig = CreateFrame("Frame")
     UIConfig.Frames = {}
+    UIConfig.ScrollFrames = {}
 
     --Menu Frame and Widgets
-    UIConfig.Frames.Menu = RE.CreateFrame("FRAME_MENU", "BasicFrameTemplateWithInset", 250, 250)
-    ---@diagnostic disable-next-line: undefined-field
-    local relativeTo, MenuFrame = UIConfig.Frames.Menu.TitleBg, UIConfig.Frames.Menu
+    UIConfig.Frames.Menu = RE.CreateFrame("REMenuFrame", "UIPanelDialogTemplate", 250, 250)
+    local MenuFrame = UIConfig.Frames.Menu
     MenuFrame.Buttons = {}
     MenuFrame.Text = {}
-    MenuFrame.Text.title = RE.CreateFontStringWithText(MenuFrame, "FRAME_MENU_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "Raid Extended")
-    MenuFrame.Buttons.GroupFinder = RE.CreateButton("FRAME_MENU_BUTTON_GROUPFINDER", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Group Finder", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.GroupFinder:SetScript("OnClick", function() self:ShowUIFrame("FRAME_GROUPFINDER") end)
-    MenuFrame.Buttons.Interface = RE.CreateButton("FRAME_MENU_BUTTON_INTERFACE", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -100, 160, 30, "Interface", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Interface:SetScript("OnClick", function() self:ShowUIFrame("FRAME_INTERFACE") end)
-    MenuFrame.Buttons.Config = RE.CreateButton("FRAME_MENU_BUTTON_CONFIG", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -140, 160, 30, "Config", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Config:SetScript("OnClick", function() self:ShowUIFrame("FRAME_CONFIG") end)
+    --Title
+    MenuFrame.Text.title = RE.CreateFontStringWithText(MenuFrame, "REMenuFrameTitle", "OVERLAY", nil, 15, "LEFT", REMenuFrameTitleBG, "LEFT", "Raid Extended", 5, -1)
+    --Button - GroupFinder
+    MenuFrame.Buttons.GroupFinder = RE.CreateButton("REGroupFinderButton", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -80, 160, 30, "Group Finder", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.GroupFinder:SetScript("OnClick", function() self:ShowUIFrame("REGroupFinderFrame") end)
+    --Button - Interface
+    MenuFrame.Buttons.Interface = RE.CreateButton("REInterfaceButton", "CENTER", MenuFrame.Buttons.GroupFinder, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Interface", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Interface:SetScript("OnClick", function() self:ShowUIFrame("REInterfaceFrame") end)
+    --Button - Config
+    MenuFrame.Buttons.Config = RE.CreateButton("REConfigButton", "CENTER", MenuFrame.Buttons.Interface, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Config", self:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Config:SetScript("OnClick", function() self:ShowUIFrame("REConfigFrame") end)
 
     --GroupFinder Frame and Widgets
-    UIConfig.Frames.GroupFinder = RE.CreateFrame("FRAME_GROUPFINDER", "BasicFrameTemplateWithInset", 300, 400)
-    ---@diagnostic disable-next-line: undefined-field
-    local relativeTo, GroupFinderFrame = UIConfig.Frames.GroupFinder.TitleBg, UIConfig.Frames.GroupFinder
-    GroupFinderFrame.title = RE.CreateFontStringWithText(GroupFinderFrame, "FRAME_GROUPFINDER_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE GroupFinder")
+    UIConfig.Frames.GroupFinder = RE.CreateFrame("REGroupFinderFrame", "UIPanelDialogTemplate", 300, 400)
+    local GroupFinderFrame = UIConfig.Frames.GroupFinder
+    --Title
+    GroupFinderFrame.title = RE.CreateFontStringWithText(GroupFinderFrame, "REGroupFinderFrameeTitle", "OVERLAY", nil, 15, "LEFT", REGroupFinderFrameTitleBG, "LEFT", "RE GroupFinder", 5, -1)
+    --Scroll Frame
+    GroupFinderFrame.ScrollFrame = CreateFrame("ScrollFrame", "REGroupFinderScrollFrame", GroupFinderFrame, "UIPanelScrollFrameTemplate")
+    local ScrollFrame = GroupFinderFrame.ScrollFrame
+    ScrollFrame:SetSize(GroupFinderFrame:GetWidth(), GroupFinderFrame:GetHeight())
+    ScrollFrame:SetPoint("TOPLEFT", REGroupFinderFrameDialogBG, "TOPLEFT", -3, -1)
+    ScrollFrame:SetPoint("BOTTOMRIGHT", REGroupFinderFrameDialogBG, "BOTTOMRIGHT", 1, -3)
+    --Scroll Bar
+    local scrollBar = ScrollFrame.ScrollBar
+    scrollBar:ClearAllPoints()
+    scrollBar:SetPoint("TOPRIGHT", ScrollFrame, "TOPRIGHT", -1, -20)
+    scrollBar:SetPoint("BOTTOMRIGHT", ScrollFrame, "BOTTOMRIGHT", -1, 20)
+    --Overloading/overwriting blizzard default OnMouseWheel widget event handler
+    ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
+    
+    --Child Frame
+    ScrollFrame.ChildFrame = CreateFrame("Frame", "REScrollFrameChildFrame", ScrollFrame)
+    local child = ScrollFrame.ChildFrame
+    child:SetSize(ScrollFrame:GetWidth() - 5, ScrollFrame:GetHeight() + 100)
+    ScrollFrame:SetScrollChild(child)
 
     --Interface Frame and Widgets
-    UIConfig.Frames.Interface = RE.CreateFrame("FRAME_INTERFACE", "BasicFrameTemplateWithInset", 500, 500)
-    ---@diagnostic disable-next-line: undefined-field
-    local relativeTo, InterfaceFrame = UIConfig.Frames.Interface.TitleBg, UIConfig.Frames.Interface
-    InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "FRAME_INTERFACE_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Interface")
+    UIConfig.Frames.Interface = RE.CreateFrame("REInterfaceFrame", "UIPanelDialogTemplate", 500, 500)
+    local InterfaceFrame = UIConfig.Frames.Interface
+    --Title
+    InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "REInterfaceFrameTitle", "OVERLAY", nil, 15, "LEFT", REInterfaceFrameTitleBG, "LEFT", "RE Interface", 5, -1)
 
     --Config Frame and Widgets
-    UIConfig.Frames.Config = RE.CreateFrame("FRAME_CONFIG", "BasicFrameTemplateWithInset", 300, 300)
-    ---@diagnostic disable-next-line: undefined-field
-    local relativeTo, ConfigFrame = UIConfig.Frames.Config.TitleBg, UIConfig.Frames.Config
-    ConfigFrame.title = RE.CreateFontStringWithText(ConfigFrame, "FRAME_CONFIG_TEXT_TITLE", "OVERLAY", nil, 18, "LEFT", relativeTo, "LEFT", "RE Config")
+    UIConfig.Frames.Config = RE.CreateFrame("REConfigFrame", "UIPanelDialogTemplate", 300, 300)
+    local ConfigFrame = UIConfig.Frames.Config
+    --Title
+    ConfigFrame.title = RE.CreateFontStringWithText(ConfigFrame, "REConfigFrameTitle", "OVERLAY", nil, 15, "LEFT", REConfigFrameTitleBG, "LEFT", "RE Config", 5, -1)
 
     --Hiding them with another function other than `HideChildFrames` 
     --because HideChildFrames indexes into reUI table that is currently being created
-    RE.HideFrames(MenuFrame, GroupFinderFrame, ConfigFrame, InterfaceFrame)
+    RE.HideFrames(GroupFinderFrame, ConfigFrame, InterfaceFrame)
     return UIConfig
 end

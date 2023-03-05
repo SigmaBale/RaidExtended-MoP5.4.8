@@ -42,7 +42,7 @@ end
 
 core.commands = {
     ["menu"] = function()
-        core.Config:ShowUIFrame("FRAME_MENU")
+        core.Config:ShowUIFrame("REMenuFrame")
     end,
 
     ["help"] = function ()
@@ -55,15 +55,15 @@ core.commands = {
     end,
 
     ["groupfinder"] = function()
-        core.Config:ShowUIFrame("FRAME_GROUPFINDER")
+        core.Config:ShowUIFrame("REGroupFinderFrame")
     end,
 
     ["interface"] = function()
-        core.Config:ShowUIFrame("FRAME_INTERFACE")
+        core.Config:ShowUIFrame("REInterfaceFrame")
     end,
 
     ["config"] = function()
-        core.Config:ShowUIFrame("FRAME_CONFIG")
+        core.Config:ShowUIFrame("REConfigFrame")
     end,
 }
 
