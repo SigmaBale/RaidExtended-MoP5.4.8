@@ -232,44 +232,74 @@ function RE.HideFrames(...)
     for _, frame in ipairs({...}) do frame:Hide() end
 end
 
-local function ScrollFrame_OnMouseWheel(self, delta) 
-    local newValue = self:GetVerticalScroll() - (delta * 5)
+--Custom "OnMouseWheel" (Scrollbar widget) event handler
+local function ScrollFrame_OnMouseWheel(self, delta)
+    local newValue = self:GetVerticalScroll() - (delta * 15)
     if (newValue < 0) then
         newValue = 0
     elseif (newValue > self:GetVerticalScrollRange()) then
         newValue = self:GetVerticalScrollRange()
     end
-
     self:SetVerticalScroll(newValue)
 end
 
---Default Menu constructor, it is not run if reUI is loaded from SavedVariables
-function Config:CreateUI()
-    --Parent Frame
-    local UIConfig = CreateFrame("Frame")
-    UIConfig.Frames = {}
-    UIConfig.ScrollFrames = {}
+--Custom "OnClick" (Button widget) event handler
+local function Tab_OnClick(self)
+    local parent = self:GetParent()
+    PanelTemplates_SetTab(parent, self:GetID())
+    local scrollChild = parent:GetScrollChild()
+    if scrollChild then scrollChild:Hide() end
+    parent:SetScrollChild(self.frame)
+    self.frame:Show()
+end
 
-    --Menu Frame and Widgets
-    UIConfig.Frames.Menu = RE.CreateFrame("REMenuFrame", "UIPanelDialogTemplate", 250, 250)
-    local MenuFrame = UIConfig.Frames.Menu
+local function SetTabs(frame, numTabs, ...)
+    frame.numTabs = numTabs
+    local frameName = frame:GetName()
+    local tabFrames = {}
+    for i=1, numTabs do
+        local tab = CreateFrame("Button", frameName.."Tab"..i, frame, "CharacterFrameTabButtonTemplate", i)
+        tab:SetText(select(i, ...))
+        tab:SetScript("OnClick", Tab_OnClick)
+        if i == 1 then
+            tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 5, 2)
+        else
+            tab:SetPoint("TOPLEFT", _G[frameName.."Tab"..(i-1)], "TOPRIGHT", -15, 0)
+        end
+        tab.frame = CreateFrame("Frame", frameName.."Tab"..i.."Frame", frame)
+        tab.frame:SetSize(frame:GetWidth()-10, frame:GetHeight()+200)
+        tab.frame:Hide()
+        table.insert(tabFrames, tab.frame)
+    end
+    --Frame that will be opened by default
+    Tab_OnClick(_G[frameName.."Tab1"])
+    ---@diagnostic disable-next-line: deprecated
+    return unpack(tabFrames)
+end
+
+local function GenerateMenu(parent)
+    --Frame
+    parent.Frames.Menu = RE.CreateFrame("REMenuFrame", "UIPanelDialogTemplate", 250, 250)
+    local MenuFrame = parent.Frames.Menu
     MenuFrame.Buttons = {}
     MenuFrame.Text = {}
     --Title
     MenuFrame.Text.title = RE.CreateFontStringWithText(MenuFrame, "REMenuFrameTitle", "OVERLAY", nil, 15, "LEFT", REMenuFrameTitleBG, "LEFT", "Raid Extended", 5, -1)
     --Button - GroupFinder
-    MenuFrame.Buttons.GroupFinder = RE.CreateButton("REGroupFinderButton", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -80, 160, 30, "Group Finder", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.GroupFinder:SetScript("OnClick", function() self:ShowUIFrame("REGroupFinderFrame") end)
+    MenuFrame.Buttons.GroupFinder = RE.CreateButton("REGroupFinderButton", "CENTER", MenuFrame, "GameMenuButtonTemplate", "TOP", 0, -80, 160, 30, "Group Finder", Config:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.GroupFinder:SetScript("OnClick", function() Config:ShowUIFrame("REGroupFinderFrame") end)
     --Button - Interface
-    MenuFrame.Buttons.Interface = RE.CreateButton("REInterfaceButton", "CENTER", MenuFrame.Buttons.GroupFinder, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Interface", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Interface:SetScript("OnClick", function() self:ShowUIFrame("REInterfaceFrame") end)
+    MenuFrame.Buttons.Interface = RE.CreateButton("REInterfaceButton", "CENTER", MenuFrame.Buttons.GroupFinder, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Interface", Config:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Interface:SetScript("OnClick", function() Config:ShowUIFrame("REInterfaceFrame") end)
     --Button - Config
-    MenuFrame.Buttons.Config = RE.CreateButton("REConfigButton", "CENTER", MenuFrame.Buttons.Interface, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Config", self:GetActiveFontPath(), 20)
-    MenuFrame.Buttons.Config:SetScript("OnClick", function() self:ShowUIFrame("REConfigFrame") end)
+    MenuFrame.Buttons.Config = RE.CreateButton("REConfigButton", "CENTER", MenuFrame.Buttons.Interface, "GameMenuButtonTemplate", "TOP", 0, -60, 160, 30, "Config", Config:GetActiveFontPath(), 20)
+    MenuFrame.Buttons.Config:SetScript("OnClick", function() Config:ShowUIFrame("REConfigFrame") end)
+end
 
-    --GroupFinder Frame and Widgets
-    UIConfig.Frames.GroupFinder = RE.CreateFrame("REGroupFinderFrame", "UIPanelDialogTemplate", 300, 400)
-    local GroupFinderFrame = UIConfig.Frames.GroupFinder
+local function GenerateGroupFinder(parent)
+    --Frame
+    parent.Frames.GroupFinder = RE.CreateFrame("REGroupFinderFrame", "UIPanelDialogTemplate", 300, 400)
+    local GroupFinderFrame = parent.Frames.GroupFinder
     --Title
     GroupFinderFrame.title = RE.CreateFontStringWithText(GroupFinderFrame, "REGroupFinderFrameeTitle", "OVERLAY", nil, 15, "LEFT", REGroupFinderFrameTitleBG, "LEFT", "RE GroupFinder", 5, -1)
     --Scroll Frame
@@ -283,29 +313,51 @@ function Config:CreateUI()
     scrollBar:ClearAllPoints()
     scrollBar:SetPoint("TOPRIGHT", ScrollFrame, "TOPRIGHT", -1, -20)
     scrollBar:SetPoint("BOTTOMRIGHT", ScrollFrame, "BOTTOMRIGHT", -1, 20)
-    --Overloading/overwriting blizzard default OnMouseWheel widget event handler
     ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel)
-    
-    --Child Frame
-    ScrollFrame.ChildFrame = CreateFrame("Frame", "REScrollFrameChildFrame", ScrollFrame)
-    local child = ScrollFrame.ChildFrame
-    child:SetSize(ScrollFrame:GetWidth() - 5, ScrollFrame:GetHeight() + 100)
-    ScrollFrame:SetScrollChild(child)
+    --Create Tabs
+    local raidsTab, otherTab = SetTabs(ScrollFrame, 2, "Raids", "Other")
+    ScrollFrame.TabFrames = {}
+    table.insert(ScrollFrame.TabFrames, raidsTab)
+    table.insert(ScrollFrame.TabFrames, otherTab)
+end
 
-    --Interface Frame and Widgets
-    UIConfig.Frames.Interface = RE.CreateFrame("REInterfaceFrame", "UIPanelDialogTemplate", 500, 500)
-    local InterfaceFrame = UIConfig.Frames.Interface
+local function GenerateInterface(parent)
+    parent.Frames.Interface = RE.CreateFrame("REInterfaceFrame", "UIPanelDialogTemplate", 500, 500)
+    local InterfaceFrame = parent.Frames.Interface
     --Title
     InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "REInterfaceFrameTitle", "OVERLAY", nil, 15, "LEFT", REInterfaceFrameTitleBG, "LEFT", "RE Interface", 5, -1)
+end
 
-    --Config Frame and Widgets
-    UIConfig.Frames.Config = RE.CreateFrame("REConfigFrame", "UIPanelDialogTemplate", 300, 300)
-    local ConfigFrame = UIConfig.Frames.Config
+local function GenerateConfig(parent)
+    parent.Frames.Config = RE.CreateFrame("REConfigFrame", "UIPanelDialogTemplate", 300, 300)
+    local ConfigFrame = parent.Frames.Config
     --Title
     ConfigFrame.title = RE.CreateFontStringWithText(ConfigFrame, "REConfigFrameTitle", "OVERLAY", nil, 15, "LEFT", REConfigFrameTitleBG, "LEFT", "RE Config", 5, -1)
+end
+
+--Default Menu constructor, it is not run if reUI is loaded from SavedVariables
+function Config:CreateUI()
+    --Parent Frame
+    local UIConfig = CreateFrame("Frame")
+    UIConfig.Frames = {}
+    UIConfig.ScrollFrames = {}
+
+    --Menu Frame and Widgets
+    GenerateMenu(UIConfig)
+
+    --GroupFinder Frame and Widgets
+    GenerateGroupFinder(UIConfig)
+
+    --Interface Frame and Widgets
+    GenerateInterface(UIConfig)
+
+    --Config Frame and Widgets
+    GenerateConfig(UIConfig)
 
     --Hiding them with another function other than `HideChildFrames` 
     --because HideChildFrames indexes into reUI table that is currently being created
-    RE.HideFrames(GroupFinderFrame, ConfigFrame, InterfaceFrame)
+    local Frames = UIConfig.Frames
+    RE.HideFrames(Frames.Menu, Frames.GroupFinder, Frames.Config, Frames.Interface)
+
     return UIConfig
 end
