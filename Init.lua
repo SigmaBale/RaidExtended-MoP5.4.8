@@ -23,11 +23,11 @@ local function HandleSlashCommand(str)
         arg = string.lower(arg)
         if (path[arg]) then
             if(type(path[arg]) == "function") then
----@diagnostic disable-next-line: deprecated
+                ---@diagnostic disable-next-line: deprecated
                 path[arg](unpack(args, idx+1))
                 return
             elseif (type(path[arg]) == "table") then
----@diagnostic disable-next-line: cast-local-type
+                ---@diagnostic disable-next-line: cast-local-type
                 path = path[arg]
             else
                 core.commands["help"]()

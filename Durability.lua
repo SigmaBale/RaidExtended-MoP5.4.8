@@ -1,15 +1,17 @@
 local _, core = ...
 
---Defining RaidExtended table because we want durability to be subtable (module)
---Load order goes Durability.lua > Core.lua, so this is why (might fix it later)
-core.RaidExtended = {}
+core.Durability = {}
 
-core.RaidExtended.Durability = {}
+local Durability = core.Durability
 
-local Durability = core.RaidExtended.Durability
+Durability.colors = {
+    red = "ff0000",
+    yellow = "fff700",
+    green = "00ff00"
+}
 
 --Est. repair cost per durability point in gold (ignoring reputation discount)
-Durability.repairCost = 0.27
+local RepairCost = 0.27
 
 --Relevant inventory slots that have durability
 Durability.inventorySlots = {
@@ -40,19 +42,62 @@ function Durability:getDurability()
 end
 
 --Gets current durability as percentage
-function Durability.getPercentage(current, maximum)
+local function GetPercentageDurability(current, maximum)
     return math.floor(current/maximum*100)
 end
 
 --Gets estimated repair cost in gold
-function Durability:getRepairCost(current, maximum)
-    return math.ceil((maximum - current)*(self.repairCost))
+local function GetRepairCost(current, maximum)
+    return math.ceil((maximum - current)*(RepairCost))
 end
 
---String used as a raid message for all durability values
-function Durability:raidMessage()
+function Durability.RequestDurability()
+    SendAddonMessage(core.prefix, "DurabilityRequest", "RAID")
+end
+
+function Durability:PlayerDurability()
     local current, maximum = self:getDurability()
-    local percentage = self.getPercentage(current, maximum)
-    local cost = self:getRepairCost(current, maximum)
-    return percentage.."% - ("..current.."/"..maximum.."), Repair: "..cost.."g"
+    local percentage = GetPercentageDurability(current, maximum)
+    local cost = GetRepairCost(current, maximum)
+    return percentage, cost
+end
+
+function Durability:SendPlayerDurability()
+    local current, maximum = self:getDurability()
+    local percentage = GetPercentageDurability(current, maximum)
+    local cost = GetRepairCost(current, maximum)
+    SendAddonMessage("__RE", percentage.." "..cost, "RAID")
+end
+
+function Durability:UpdatePlayerDurability(player, durability, cost)
+    player.durability = durability
+    player.cost = cost
+end
+
+function Durability:GetTotalDurabilityAndCost()
+    local totalDurability, totalCost = self:PlayerDurability()
+    for _, player in pairs(core.Table.players) do
+        totalDurability = totalDurability + player.durability
+        totalCost = totalCost + player.cost
+    end 
+    print(#core.Table.players+1)
+    return totalDurability/(#core.Table.players+1), totalCost
+end
+
+function Durability:SetDurabilityFrameText(totalDurability, totalCost, fontString)
+    local durabilityHexColor = self:DurabilityColor(totalDurability)
+    local goldHexColor = "ffd700"
+    print(totalDurability.." "..totalCost.." "..durabilityHexColor.." "..goldHexColor)
+    local text = format("|cff%s%s|r  -  %s|cff%sg|r", durabilityHexColor, totalDurability, totalCost, goldHexColor)
+    fontString:SetText(text)
+end
+
+function Durability:DurabilityColor(totalDurability)
+    if totalDurability >= 66 and totalDurability <= 100 then
+        return self.colors.green
+    elseif totalDurability > 33 and totalDurability < 66 then
+        return self.colors.yellow
+    elseif totalDurability >= 0 and totalDurability <= 33 then
+        return self.colors.red
+    end
 end

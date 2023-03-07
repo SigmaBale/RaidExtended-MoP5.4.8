@@ -1,13 +1,15 @@
 --Core => namespace (core table)
 local _, core = ...
 
+core.Table = { players = {} }
+core.prefix = "__RE"
 core.Config = {}
 
 local Config = core.Config
 
 ---Variable that either is asigned the return value of Config:CreateUI() (Frame object)
 ---or gets the value from SavedVariables "RaidExtendedDB"
-local reUI
+reUI = nil
 
 --Font names and data
 Config.Fonts = {
@@ -72,8 +74,19 @@ for _, fontData in pairs(Config.Fonts) do
 end
 
 local defaults = {
-    theme = "Default"
+    theme = "Mango"
 }
+
+--Works only for this format: XXYYZZ (x = red, y = green, z = blue)
+local function HexToRgb(str)
+    local rgb = {}
+    for i=1, #str, 2 do
+        local hex = str:sub(i, i+1)
+        table.insert(rgb, tonumber(hex, 16)/255)
+    end
+    ---@diagnostic disable-next-line: deprecated
+    return unpack(rgb)
+end
 
 --Themes
 Config.Themes = {
@@ -122,7 +135,12 @@ Config.Themes = {
 
 --Returns font path from currently active theme
 function Config:GetActiveFontPath()
-    return select(1, self:GetActiveFontObject():GetFont())
+    local path = self:GetActiveFontObject():GetFont()
+    return path
+end
+
+function Config:GetActiveFontRGB()
+    return HexToRgb(Config:GetActiveTheme().text.color)
 end
 
 --Returns font object from currently active theme
@@ -296,6 +314,44 @@ local function GenerateMenu(parent)
     MenuFrame.Buttons.Config:SetScript("OnClick", function() Config:ShowUIFrame("REConfigFrame") end)
 end
 
+function RE.CreateInterfaceSubFrame(parent, anchor)
+    local DurabilityOutputFrame = CreateFrame("Frame", "REDurabilityFrameOuputFrame", parent, "ThinBorderTemplate")
+    DurabilityOutputFrame:SetPoint("LEFT", anchor, "RIGHT", 10, 0)
+    DurabilityOutputFrame:SetSize(parent:GetWidth()-anchor:GetWidth()-40, parent:GetHeight()/2)
+    DurabilityOutputFrame.TopLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.TopRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.BottomLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.BottomRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Top:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Bottom:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Left:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Right:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.tex = DurabilityOutputFrame:CreateTexture(nil, "ARTWORK")
+    DurabilityOutputFrame.tex:SetAllPoints(DurabilityOutputFrame)
+    DurabilityOutputFrame.tex:SetTexture("Interface/Tooltips/UI-Tooltip-Background")
+    DurabilityOutputFrame.tex:SetVertexColor(0, 0, 0, 1)
+    return DurabilityOutputFrame
+end
+
+function RE.CreateInterfaceButton(parent, anchor)
+    local DurabilityBtn = CreateFrame("Button", "GetDurabilityButton", parent, "GameMenuButtonTemplate")
+    DurabilityBtn:SetPoint("LEFT", anchor, "LEFT", 5, 0)
+    DurabilityBtn:SetSize(100, parent:GetHeight()/2)
+    DurabilityBtn:GetFontString():SetFont(Config:GetActiveFontPath(), 13)
+    DurabilityBtn:SetText("Durability")
+    DurabilityBtn:SetScript("OnClick", core.Durability.RequestDurability)
+    return DurabilityBtn
+end
+
+function RE.CreateInterfaceFrame(parent, anchor)
+    local DurabilityFrame = CreateFrame("Frame", "REDurabilityFrame", parent)
+    DurabilityFrame.Frames = {}
+    DurabilityFrame.Buttons = {}
+    DurabilityFrame:SetPoint("TOPLEFT", anchor, "TOPLEFT", 20, -35)
+    DurabilityFrame:SetSize(parent:GetWidth()-20, 50)
+    return DurabilityFrame
+end
+
 local function GenerateGroupFinder(parent)
     --Frame
     parent.Frames.GroupFinder = RE.CreateFrame("REGroupFinderFrame", "UIPanelDialogTemplate", 300, 400)
@@ -326,6 +382,17 @@ local function GenerateInterface(parent)
     local InterfaceFrame = parent.Frames.Interface
     --Title
     InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "REInterfaceFrameTitle", "OVERLAY", nil, 15, "LEFT", REInterfaceFrameTitleBG, "LEFT", "RE Interface", 5, -1)
+    InterfaceFrame.Frames = {}
+    --Interface subframes and widgets
+    InterfaceFrame.Frames.Durability = RE.CreateInterfaceFrame(InterfaceFrame, InterfaceFrame)
+    local DurabilityFrame = InterfaceFrame.Frames.Durability
+    DurabilityFrame.Buttons.GetDurability = RE.CreateInterfaceButton(DurabilityFrame, DurabilityFrame)
+    local DurabilityBtn = DurabilityFrame.Buttons.GetDurability
+    DurabilityFrame.Frames.Output = RE.CreateInterfaceSubFrame(DurabilityFrame, DurabilityBtn)
+    local DurabilitySubFrame = DurabilityFrame.Frames.Output
+    DurabilitySubFrame.Text = DurabilityFrame.Frames.Output:CreateFontString(nil, "OVERLAY")
+    DurabilitySubFrame.Text:SetFont(Config:GetActiveFontPath(), 13)
+    DurabilitySubFrame.Text:SetPoint("CENTER", DurabilitySubFrame, "CENTER")
 end
 
 local function GenerateConfig(parent)
@@ -357,7 +424,7 @@ function Config:CreateUI()
     --Hiding them with another function other than `HideChildFrames` 
     --because HideChildFrames indexes into reUI table that is currently being created
     local Frames = UIConfig.Frames
-    RE.HideFrames(Frames.Menu, Frames.GroupFinder, Frames.Config, Frames.Interface)
+    RE.HideFrames(Frames.GroupFinder, Frames.Config, Frames.Interface)
 
     return UIConfig
 end
