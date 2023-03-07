@@ -314,8 +314,8 @@ local function GenerateMenu(parent)
     MenuFrame.Buttons.Config:SetScript("OnClick", function() Config:ShowUIFrame("REConfigFrame") end)
 end
 
-function RE.CreateInterfaceSubFrame(parent, anchor)
-    local DurabilityOutputFrame = CreateFrame("Frame", "REDurabilityFrameOuputFrame", parent, "ThinBorderTemplate")
+function RE.CreateInterfaceSubFrame(name, parent, anchor)
+    local DurabilityOutputFrame = CreateFrame("Frame", name, parent, "ThinBorderTemplate")
     DurabilityOutputFrame:SetPoint("LEFT", anchor, "RIGHT", 10, 0)
     DurabilityOutputFrame:SetSize(parent:GetWidth()-anchor:GetWidth()-40, parent:GetHeight()/2)
     DurabilityOutputFrame.TopLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
@@ -339,7 +339,13 @@ function RE.CreateInterfaceButton(parent, anchor)
     DurabilityBtn:SetSize(100, parent:GetHeight()/2)
     DurabilityBtn:GetFontString():SetFont(Config:GetActiveFontPath(), 13)
     DurabilityBtn:SetText("Durability")
-    DurabilityBtn:SetScript("OnClick", core.Durability.RequestDurability)
+    DurabilityBtn:SetScript("OnClick", function()
+        if IsInGroup() then
+            core.Durability:RequestDurability()
+        else
+            core.Durability:SetDurabilityFrameText()
+        end
+    end)
     return DurabilityBtn
 end
 
@@ -388,7 +394,7 @@ local function GenerateInterface(parent)
     local DurabilityFrame = InterfaceFrame.Frames.Durability
     DurabilityFrame.Buttons.GetDurability = RE.CreateInterfaceButton(DurabilityFrame, DurabilityFrame)
     local DurabilityBtn = DurabilityFrame.Buttons.GetDurability
-    DurabilityFrame.Frames.Output = RE.CreateInterfaceSubFrame(DurabilityFrame, DurabilityBtn)
+    DurabilityFrame.Frames.Output = RE.CreateInterfaceSubFrame("DurabilityOutputFrame", DurabilityFrame, DurabilityBtn)
     local DurabilitySubFrame = DurabilityFrame.Frames.Output
     DurabilitySubFrame.Text = DurabilityFrame.Frames.Output:CreateFontString(nil, "OVERLAY")
     DurabilitySubFrame.Text:SetFont(Config:GetActiveFontPath(), 13)

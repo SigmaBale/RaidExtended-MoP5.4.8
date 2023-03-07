@@ -55,44 +55,49 @@ function Durability.RequestDurability()
     SendAddonMessage(core.prefix, "DurabilityRequest", "RAID")
 end
 
-function Durability:PlayerDurability()
+--Argument (boolean) dictates if we want to send our durability or just return in. 
+--If arg is true then we send otherwise return the values.
+function Durability:SendPlayerDurability(send)
     local current, maximum = self:getDurability()
     local percentage = GetPercentageDurability(current, maximum)
     local cost = GetRepairCost(current, maximum)
-    return percentage, cost
+    if send == true then SendAddonMessage("__RE", percentage.." "..cost, "RAID")
+    else return percentage, cost end
 end
 
-function Durability:SendPlayerDurability()
-    local current, maximum = self:getDurability()
-    local percentage = GetPercentageDurability(current, maximum)
-    local cost = GetRepairCost(current, maximum)
-    SendAddonMessage("__RE", percentage.." "..cost, "RAID")
-end
-
-function Durability:UpdatePlayerDurability(player, durability, cost)
-    player.durability = durability
-    player.cost = cost
+--TODO: Add additional parsing when API expands
+function Durability:ReadMessage(msg, type)
+    if type == "durability" then return strsplit(" ", msg)
+    else return nil end
 end
 
 function Durability:GetTotalDurabilityAndCost()
-    local totalDurability, totalCost = self:PlayerDurability()
+    local totalDurability, totalCost = self:SendPlayerDurability(false)
+    local playerCount = 0
     for _, player in pairs(core.Table.players) do
         totalDurability = totalDurability + player.durability
         totalCost = totalCost + player.cost
-    end 
-    print(#core.Table.players+1)
-    return totalDurability/(#core.Table.players+1), totalCost
+        playerCount = playerCount + 1
+    end
+    return totalDurability/(playerCount+1), totalCost
 end
 
-function Durability:SetDurabilityFrameText(totalDurability, totalCost, fontString)
-    local durabilityHexColor = self:DurabilityColor(totalDurability)
+function Durability:SetDurabilityFrameText(durability, cost)
+    local playerDurability, playerCost = self:SendPlayerDurability(false)
+    local newDurability = durability or playerDurability
+    local newCost = cost or playerCost
+
+    local durabilityHexColor = self:GetDurabilityColor(newDurability)
     local goldHexColor = "ffd700"
-    print(totalDurability.." "..totalCost.." "..durabilityHexColor.." "..goldHexColor)
-    local text = format("|cff%s%s|r  -  %s|cff%sg|r", durabilityHexColor, totalDurability, totalCost, goldHexColor)
-    fontString:SetText(text)
+    local text = format("|cff%s%s|r  -  %s|cff%sg|r", durabilityHexColor, newDurability, newCost, goldHexColor)
+    _G["DurabilityOutputFrame"].Text:SetText(text)
 end
 
-function Durability:DurabilityColor(totalDurability)
+function Durability:ClearFrameText()
+    _G["DurabilityOutputFrame"].Text:SetText("")
+end
+
+function Durability:GetDurabilityColor(totalDurability)
     if totalDurability >= 66 and totalDurability <= 100 then
         return self.colors.green
     elseif totalDurability > 33 and totalDurability < 66 then
