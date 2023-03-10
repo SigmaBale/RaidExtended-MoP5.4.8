@@ -68,15 +68,15 @@ core.commands = {
 }
 
 function core:printHelp(cmd_section, text_section)
-    local text, commandsColor, trackerColor = core.Config:GetActiveThemeComponents()
+    local textColor, commandsColor, trackerColor = core.Config:GetActiveThemeColors()
     local prefix = string.format("|cff%s%s|r", trackerColor, "RaidExtended:")
     local command = string.format("|cff%s%s|r ", commandsColor, cmd_section)
-    local reg_text = string.format("|cff%s%s|r", text.color, text_section)
+    local reg_text = string.format("|cff%s%s|r", textColor, text_section)
     DEFAULT_CHAT_FRAME:AddMessage(prefix..command..reg_text)
 end
 
 function core:print(...)
-    local _, _, trackerColor = core.Config:GetActiveThemeComponents()
+    local _, _, trackerColor = core.Config:GetActiveThemeColors()
     local prefix = string.format("|cff%s%s|r", trackerColor, "RaidExtended:")
     DEFAULT_CHAT_FRAME:AddMessage(string.format("%s%s", prefix, table.concat({...}, " ")))
 end

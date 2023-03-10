@@ -13,54 +13,54 @@ reUI = nil
 
 --Font names and data
 Config.Fonts = {
-    ["LifeCraft"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\LifeCraft_Font.ttf", 
+    ["LifeCraft"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\LifeCraft_Font.ttf",
         size = 14,
         --If font object already exists we use that instead of creating a new object with the same name
         object = _G["LifeCraft"] or CreateFont("LifeCraft"),
     },
-    ["DiabloLight"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\DiabloLight.ttf", 
+    ["DiabloLight"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\DiabloLight.ttf",
         size = 14,
         object = _G["DiabloLight"] or CreateFont("DiabloLight")
     },
-    ["DiabloHeavy"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\DiabloHeavy.ttf", 
+    ["DiabloHeavy"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\DiabloHeavy.ttf",
         size = 14,
         object = _G["DiabloHeavy"] or CreateFont("DiabloHeavy")
     },
-    ["GolosTextRegular"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Regular.ttf", 
+    ["GolosTextRegular"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Regular.ttf",
         size = 14,
         object = _G["GolosTextRegular"] or CreateFont("GolosTextRegular")
     },
-    ["GolosTextMedium"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Medium.ttf", 
+    ["GolosTextMedium"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Medium.ttf",
         size = 14,
         object = _G["GolosTextMedium"] or CreateFont("GolosTextMedium")
     },
-    ["GolosTextBold"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Bold.ttf", 
+    ["GolosTextBold"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\GolosText-Bold.ttf",
         size = 14,
         object = _G["GolosTextBold"] or CreateFont("GolosTextBold")
     },
-    ["UbuntuLight"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Ubuntu-Light.ttf", 
+    ["UbuntuLight"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Ubuntu-Light.ttf",
         size = 14,
         object = _G["UbuntuLight"] or CreateFont("UbuntuLight")
     },
-    ["UbuntuRegular"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Ubuntu-Regular.ttf", 
+    ["UbuntuRegular"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Ubuntu-Regular.ttf",
         size = 14,
         object = _G["UbuntuRegular"] or CreateFont("UbuntuRegular")
     },
-    ["TiltNeonRegular"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\TiltNeon-Regular.ttf", 
+    ["TiltNeonRegular"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\TiltNeon-Regular.ttf",
         size = 14,
         object = _G["TiltNeonRegular"] or CreateFont("TiltNeonRegular")
     },
-    ["OswaldExtraLight"] = { 
-        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Oswald-ExtraLight.ttf", 
+    ["OswaldExtraLight"] = {
+        path = "Interface\\AddOns\\RaidExtended\\resources\\fonts\\Oswald-ExtraLight.ttf",
         size = 14,
         object = _G["OswaldExtraLight"] or CreateFont("OswaldExtraLight")
     }
@@ -92,43 +92,33 @@ end
 Config.Themes = {
     ["Default"] = {
         ["text"] = {
-            ["color"] = "efe6d5",
+            ["colors"] = { "efe6d5", "e73213", "9dbeb7" },
             ["font"] = Config.Fonts.UbuntuLight.object
-        },
-        ["command"] = "e73213",
-        ["tracker"] = "9dbeb7",
+        }
     },
     ["Mango"] = {
         ["text"] = {
-            ["color"] = "fef031",
+            ["colors"] = { "fef031", "bde902", "018558" },
             ["font"] = Config.Fonts.GolosTextRegular.object
-        },
-        ["command"] = "bde902",
-        ["tracker"] = "018558",
+        }
     },
     ["Ambition"] = {
         ["text"] = {
-            ["color"] = "eaebea",
+            ["color"] = { "eaebea", "d8323c", "0c0e0c"},
             ["font"] = Config.Fonts.UbuntuRegular.object
-        },
-        ["command"] = "d8323c",
-        ["tracker"] = "0c0e0c",
+        }
     },
     ["JetBlue"] = {
         ["text"] = {
-            ["color"] = "d7eaf3",
+            ["color"] = { "d7eaf3", "77b5d9", "14397d" },
             ["font"] = Config.Fonts.TiltNeonRegular.object
-        },
-        ["command"] = "77b5d9",
-        ["tracker"] = "14397d",
+        }
     },
     ["Futuristic"] = {
         ["text"] = {
-            ["color"] = "a0fefb",
+            ["color"] = { "a0fefb", "494fc1", "fd084a"},
             ["font"] = Config.Fonts.OswaldExtraLight.object
-        },
-        ["command"] = "494fc1",
-        ["tracker"] = "fd084a",
+        }
     },
     active = defaults.theme
 }
@@ -140,7 +130,7 @@ function Config:GetActiveFontPath()
 end
 
 function Config:GetActiveFontRGB()
-    return HexToRgb(Config:GetActiveTheme().text.color)
+    return HexToRgb(Config:GetActiveTheme().text.colors[1])
 end
 
 --Returns font object from currently active theme
@@ -154,9 +144,10 @@ function Config:GetActiveTheme()
 end
 
 --Returns currently active theme components
-function Config:GetActiveThemeComponents()
+function Config:GetActiveThemeColors()
     local theme = self:GetActiveTheme()
-    return theme.text, theme.command, theme.tracker
+    ---@diagnostic disable-next-line: deprecated
+    return unpack(theme.text.colors)
 end
 
 --Sets active theme, or returns nil on failure
@@ -314,50 +305,6 @@ local function GenerateMenu(parent)
     MenuFrame.Buttons.Config:SetScript("OnClick", function() Config:ShowUIFrame("REConfigFrame") end)
 end
 
-function RE.CreateInterfaceSubFrame(name, parent, anchor)
-    local DurabilityOutputFrame = CreateFrame("Frame", name, parent, "ThinBorderTemplate")
-    DurabilityOutputFrame:SetPoint("LEFT", anchor, "RIGHT", 10, 0)
-    DurabilityOutputFrame:SetSize(parent:GetWidth()-anchor:GetWidth()-40, parent:GetHeight()/2)
-    DurabilityOutputFrame.TopLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.TopRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.BottomLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.BottomRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.Top:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.Bottom:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.Left:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.Right:SetVertexColor(Config:GetActiveFontRGB(), 1)
-    DurabilityOutputFrame.tex = DurabilityOutputFrame:CreateTexture(nil, "ARTWORK")
-    DurabilityOutputFrame.tex:SetAllPoints(DurabilityOutputFrame)
-    DurabilityOutputFrame.tex:SetTexture("Interface/Tooltips/UI-Tooltip-Background")
-    DurabilityOutputFrame.tex:SetVertexColor(0, 0, 0, 1)
-    return DurabilityOutputFrame
-end
-
-function RE.CreateInterfaceButton(parent, anchor)
-    local DurabilityBtn = CreateFrame("Button", "GetDurabilityButton", parent, "GameMenuButtonTemplate")
-    DurabilityBtn:SetPoint("LEFT", anchor, "LEFT", 5, 0)
-    DurabilityBtn:SetSize(100, parent:GetHeight()/2)
-    DurabilityBtn:GetFontString():SetFont(Config:GetActiveFontPath(), 13)
-    DurabilityBtn:SetText("Durability")
-    DurabilityBtn:SetScript("OnClick", function()
-        if IsInGroup() then
-            core.Durability:RequestDurability()
-        else
-            core.Durability:SetDurabilityFrameText()
-        end
-    end)
-    return DurabilityBtn
-end
-
-function RE.CreateInterfaceFrame(parent, anchor)
-    local DurabilityFrame = CreateFrame("Frame", "REDurabilityFrame", parent)
-    DurabilityFrame.Frames = {}
-    DurabilityFrame.Buttons = {}
-    DurabilityFrame:SetPoint("TOPLEFT", anchor, "TOPLEFT", 20, -35)
-    DurabilityFrame:SetSize(parent:GetWidth()-20, 50)
-    return DurabilityFrame
-end
-
 local function GenerateGroupFinder(parent)
     --Frame
     parent.Frames.GroupFinder = RE.CreateFrame("REGroupFinderFrame", "UIPanelDialogTemplate", 300, 400)
@@ -383,6 +330,58 @@ local function GenerateGroupFinder(parent)
     table.insert(ScrollFrame.TabFrames, otherTab)
 end
 
+local InterfacexOffset = 10
+
+function RE.CreateInterfaceSubFrame(name, parent, anchor, width, height)
+    local DurabilityOutputFrame = CreateFrame("Frame", name, parent, "ThinBorderTemplate")
+    DurabilityOutputFrame:SetPoint("LEFT", anchor, "RIGHT", InterfacexOffset, 0)
+    DurabilityOutputFrame:SetSize(width, height)
+    DurabilityOutputFrame.TopLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.TopRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.BottomLeft:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.BottomRight:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Top:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Bottom:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Left:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.Right:SetVertexColor(Config:GetActiveFontRGB(), 1)
+    DurabilityOutputFrame.tex = DurabilityOutputFrame:CreateTexture(nil, "ARTWORK")
+    DurabilityOutputFrame.tex:SetAllPoints(DurabilityOutputFrame)
+    DurabilityOutputFrame.tex:SetTexture("Interface/Tooltips/UI-Tooltip-Background")
+    DurabilityOutputFrame.tex:SetVertexColor(0, 0, 0, 1)
+    return DurabilityOutputFrame
+end
+
+function RE.CreateInterfaceButton(parent, anchor)
+    local DurabilityBtn = CreateFrame("Button", "GetDurabilityButton", parent, "GameMenuButtonTemplate")
+    DurabilityBtn:SetPoint("LEFT", anchor, "LEFT", InterfacexOffset, 0)
+    DurabilityBtn:SetSize(100, parent:GetHeight()/2)
+    DurabilityBtn:GetFontString():SetFont(Config:GetActiveFontPath(), 13)
+    DurabilityBtn:SetText("Durability")
+    DurabilityBtn:SetScript("OnClick", function()
+        if IsInGroup() then
+            core.Durability:RequestDurability()
+        else
+            core.Durability:SetDurabilityFrameText()
+        end
+    end)
+    return DurabilityBtn
+end
+
+function RE.CreateInterfaceFrame(parent, anchor, name)
+    local DurabilityFrame = CreateFrame("Frame", name, parent)
+    DurabilityFrame.Frames = {}
+    DurabilityFrame.Buttons = {}
+    DurabilityFrame:SetPoint("TOPLEFT", anchor, "TOPLEFT", InterfacexOffset, -35)
+    DurabilityFrame:SetSize(parent:GetWidth()-InterfacexOffset, 50)
+    return DurabilityFrame
+end
+
+local function SubFrameDimensions(parent, anchor)
+    local width = parent:GetWidth() - 4*InterfacexOffset - anchor:GetWidth()
+    local height = parent:GetHeight()/2
+    return width, height
+end
+
 local function GenerateInterface(parent)
     parent.Frames.Interface = RE.CreateFrame("REInterfaceFrame", "UIPanelDialogTemplate", 500, 500)
     local InterfaceFrame = parent.Frames.Interface
@@ -390,12 +389,16 @@ local function GenerateInterface(parent)
     InterfaceFrame.title = RE.CreateFontStringWithText(InterfaceFrame, "REInterfaceFrameTitle", "OVERLAY", nil, 15, "LEFT", REInterfaceFrameTitleBG, "LEFT", "RE Interface", 5, -1)
     InterfaceFrame.Frames = {}
     --Interface subframes and widgets
-    InterfaceFrame.Frames.Durability = RE.CreateInterfaceFrame(InterfaceFrame, InterfaceFrame)
+    InterfaceFrame.Frames.Durability = RE.CreateInterfaceFrame(InterfaceFrame, InterfaceFrame, "REDurabilityFrame")
     local DurabilityFrame = InterfaceFrame.Frames.Durability
+
     DurabilityFrame.Buttons.GetDurability = RE.CreateInterfaceButton(DurabilityFrame, DurabilityFrame)
     local DurabilityBtn = DurabilityFrame.Buttons.GetDurability
-    DurabilityFrame.Frames.Output = RE.CreateInterfaceSubFrame("DurabilityOutputFrame", DurabilityFrame, DurabilityBtn)
+
+    local width, height = SubFrameDimensions(DurabilityFrame, DurabilityBtn)
+    DurabilityFrame.Frames.Output = RE.CreateInterfaceSubFrame("DurabilityOutputFrame", DurabilityFrame, DurabilityBtn, width, height)
     local DurabilitySubFrame = DurabilityFrame.Frames.Output
+
     DurabilitySubFrame.Text = DurabilityFrame.Frames.Output:CreateFontString(nil, "OVERLAY")
     DurabilitySubFrame.Text:SetFont(Config:GetActiveFontPath(), 13)
     DurabilitySubFrame.Text:SetPoint("CENTER", DurabilitySubFrame, "CENTER")

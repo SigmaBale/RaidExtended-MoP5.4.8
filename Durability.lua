@@ -67,19 +67,24 @@ end
 
 --TODO: Add additional parsing when API expands
 function Durability:ReadMessage(msg, type)
-    if type == "durability" then return strsplit(" ", msg)
+    if type == "durability" then
+        local durability, cost = strsplit(" ", msg)
+        return tonumber(durability), tonumber(cost)
     else return nil end
 end
 
 function Durability:GetTotalDurabilityAndCost()
     local totalDurability, totalCost = self:SendPlayerDurability(false)
-    local playerCount = 0
-    for _, player in pairs(core.Table.players) do
+    local playerCount, lowest, name = 0, 100, "None"
+    for key, player in pairs(core.Table.players) do
+        if player.durability < lowest then
+            lowest, name  = player.durability, key
+        end
         totalDurability = totalDurability + player.durability
         totalCost = totalCost + player.cost
         playerCount = playerCount + 1
     end
-    return totalDurability/(playerCount+1), totalCost
+    return totalDurability/(playerCount+1), totalCost, name, lowest
 end
 
 function Durability:SetDurabilityFrameText(durability, cost)
@@ -89,7 +94,8 @@ function Durability:SetDurabilityFrameText(durability, cost)
 
     local durabilityHexColor = self:GetDurabilityColor(newDurability)
     local goldHexColor = "ffd700"
-    local text = format("|cff%s%s|r  -  %s|cff%sg|r", durabilityHexColor, newDurability, newCost, goldHexColor)
+    local text = format("|cff%s%d|r  -  %d|cff%sg|r", durabilityHexColor, newDurability, newCost, goldHexColor)
+    print(text)
     _G["DurabilityOutputFrame"].Text:SetText(text)
 end
 
